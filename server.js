@@ -115,6 +115,43 @@ app.put('/users/:id', function(req, res){
   });
 });
 
+app.post('/login', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+
+  if(!username || !password) {
+    return res.status(400).send("Både användarnamn och lösenord krävs.");
+  }
+
+  var sql = "SELECT id, username, password, first_name, last_name FROM users WHERE username = ?"
+
+  con.query(sql, [username], function(err, results) {
+    if (err) {
+      console.log(err);
+      return res.status(500).send("Ett fel uppstod i databasen.");
+    }
+
+  if (results.length === 0) {
+    return res.status(401).send("Fel användarnamen eller lösenord")
+  }
+
+  var passwordHash = hash(password);
+
+  if (results[0].password === passwordHash) {
+
+    var loggedInUser = {
+      id: results[0].id,
+      username: results[0].username,
+      first_name: results[0].first_name,
+      last_name: results[0].last_name
+    };
+
+    res.status(200).json(loggedInUser);
+  } else {
+    res.status(401).send("Fel användarnamn eller lösenord.")
+  }
+  })
+})
 http.listen(port, function() {
    console.log('Server is listening on *:' + port);
 });

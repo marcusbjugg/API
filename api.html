@@ -14,5 +14,6 @@
     <p><strong>POST /users</strong> - Skapar en ny användare i databasen. Kräver en JSON-body med username, password, first_name och last_name.</p>
     <p><strong>GET /users/:id</strong> - Hämtar information om en specifik användare baserat på ID.</p>
     <p><strong>PUT /users/:id</strong> - Uppdaterar alla uppgifter för en specifik användare via ID. Lösenordet hashas.</p>
+    <p><strong>POST /login</strong> - Loggar in en användare. Kräver en JSON-body med username och password. Returnerar användarens unika uppgifter vid framgång men inte lösenordet</p>
 </body>
 </html>
