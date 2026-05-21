@@ -36,6 +36,29 @@ app.get('/users', function(req, res) {
   });
 });
 
+app.post('/users', function(req, res) {
+
+  var username = req.body.username;
+  var password = req.body.password;
+  var first_name = req.body.first_name;
+  var last_name = req.body.last_name;
+
+  var sql = "INSERT INTO users (username, password, first_name, last_name) VALUES (?, ?, ?, ?)";
+  con.query(sql, [username, password, first_name, last_name], function(err, result) {
+    if (err) {
+      console.log(err);
+      return res.status(500).send("Ett fel uppstod när användaren skulle sparas")
+    }
+
+    res.status(201).json({
+      id: result.insertId,
+      username: username,
+      first_name: first_name,
+      last_name: last_name
+    });
+  });
+});
+
 http.listen(port, function() {
    console.log('Server is listening on *:' + port);
 });
