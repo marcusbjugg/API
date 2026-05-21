@@ -22,6 +22,13 @@ app.get('/', function(req, res) {
   res.sendFile(__dirname + '/api.html');
 });
 
+const crypto = require("crypto");
+function hash(data) {
+  const hash = crypto.createHash("sha256");
+  hash.update(data);
+  return hash.digest("hex");
+}
+
 app.get('/users', function(req, res) {
   var sql = "SELECT id, username, first_name, last_name FROM users";
 
@@ -61,8 +68,11 @@ app.post('/users', function(req, res) {
   var first_name = req.body.first_name;
   var last_name = req.body.last_name;
 
+  var hashedPassword = hash(password)
+
   var sql = "INSERT INTO users (username, password, first_name, last_name) VALUES (?, ?, ?, ?)";
-  con.query(sql, [username, password, first_name, last_name], function(err, result) {
+
+  con.query(sql, [username, hashedPassword, first_name, last_name], function(err, result) {
     if (err) {
       console.log(err);
       return res.status(500).send("Ett fel uppstod när användaren skulle sparas")
@@ -73,6 +83,34 @@ app.post('/users', function(req, res) {
       username: username,
       first_name: first_name,
       last_name: last_name
+    });
+  });
+});
+
+app.put('/users/:id', function(req, res){
+  var userId = req.params.id;
+  var username = req.body.username;
+  var password = req.body.password;
+  var first_name = req.body.first_name;
+  var last_name = req.body.last_name;
+
+  var hashedPassword = hash(password)
+
+  var sql = "UPDATE users SET username = ?, password = ?, first_name = ?, last_name = ? WHERE id = ?";
+
+  con.query(sql, [username, hashedPassword, first_name, last_name, userId], function(err, result) {
+    if (err) {
+      console.log(err);
+      return res.status(500).send("Ett fel uppstod i databasen.");
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).send("Användaren hittades inte.");
+    }
+
+    res.json({
+      message: "Användaren har uppdaterats",
+      updatedId: userId
     });
   });
 });
