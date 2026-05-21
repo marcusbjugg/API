@@ -11,6 +11,9 @@ con.connect(function(err) {
   console.log("Connected");
 });
 
+const jwt = require("jsonwebtoken");
+const secret = "dennalöseringen1234marcusärenpartymyra:)"
+
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -30,17 +33,32 @@ function hash(data) {
 }
 
 app.get('/users', function(req, res) {
-  var sql = "SELECT id, username, first_name, last_name FROM users";
+  
+  let authHeader = req.headers["authorization"];
+  if (authHeader === undefined) {
+    return res.sendStatus(400);
+  }
 
+  let token = authHeader.slice(7)
 
-  con.query(sql, function(err, results) {
+  let decoded;
+  try {
+    decoded = jwt.verify(token, secret);
+  } catch (err) {
+    console.log(err);
+    return res.status(401).send("Ogiltig token");
+  }
+
+  var sql = "SELECT id, username, first_name, last_name FROM users WHERE id = ?"
+
+  con.query(sql, [decoded.id], function(err, results) {
     if (err) {
       console.log(err);
       return res.status(500).send("Ett fel uppstod i databasen.");
     }
-    
-    res.json(results);
-  });
+
+    res.json(results[0]);
+  })
 });
 
 app.get('/users/:id', function(req, res) {
@@ -79,7 +97,7 @@ app.post('/users', function(req, res) {
     }
 
     res.status(201).json({
-      id: result.insertId,
+      ident: result.insertId,
       username: username,
       first_name: first_name,
       last_name: last_name
@@ -139,14 +157,16 @@ app.post('/login', function(req, res) {
 
   if (results[0].password === passwordHash) {
 
-    var loggedInUser = {
+    let payload = {
       id: results[0].id,
-      username: results[0].username,
-      first_name: results[0].first_name,
-      last_name: results[0].last_name
+      name: results[0].first_name,
+      lastname: results[0].last_name
     };
 
-    res.status(200).json(loggedInUser);
+    let token = jwt.sign(payload, secret, { expiresIn: '1h' });
+
+    res.json({ token : token});
+
   } else {
     res.status(401).send("Fel användarnamn eller lösenord.")
   }
