@@ -62,6 +62,22 @@ app.get('/users', function(req, res) {
 });
 
 app.get('/users/:id', function(req, res) {
+
+  let authHeader = req.headers["authorization"];
+  if (authHeader === undefined) {
+    return res.sendStatus(400);
+  }
+
+  let token = authHeader.slice(7)
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, secret);
+  } catch (err) {
+    console.log(err);
+    return res.status(401).send("Ogiltig token");
+  }
+
   var userId = req.params.id;
   var sql = "SELECT id, username, first_name, last_name FROM users where id = ?";
 
