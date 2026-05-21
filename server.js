@@ -84,7 +84,7 @@ app.get('/users/:id', function(req, res) {
   con.query(sql, [userId], function(err, results) {
     if (err) {
       console.log(err);
-      return req.status(500).send("Ett fel uppstod i databasen.");
+      return res.status(500).send("Ett fel uppstod i databasen.");
     }
 
     if (results.length === 0) {
@@ -122,6 +122,26 @@ app.post('/users', function(req, res) {
 });
 
 app.put('/users/:id', function(req, res){
+
+  let authHeader = req.headers["authorization"];
+  if (authHeader === undefined) {
+    return res.sendStatus(400);
+  }
+
+  let token = authHeader.slice(7)
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, secret);
+  } catch (err) {
+    console.log(err);
+    return res.status(401).send("Ogiltig token");
+  }
+
+  if (req.params.id != decoded.id) {
+    return res.status(403).send("Du har inte tillåtelse att ändra andras profiler.")
+  }
+
   var userId = req.params.id;
   var username = req.body.username;
   var password = req.body.password;
