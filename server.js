@@ -36,6 +36,24 @@ app.get('/users', function(req, res) {
   });
 });
 
+app.get('/users/:id', function(req, res) {
+  var userId = req.params.id;
+  var sql = "SELECT id, username, first_name, last_name FROM users where id = ?";
+
+  con.query(sql, [userId], function(err, results) {
+    if (err) {
+      console.log(err);
+      return req.status(500).send("Ett fel uppstod i databasen.");
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send("Finns ej användare med detta id")
+    }
+
+    res.json(results[0]);
+  })
+})
+
 app.post('/users', function(req, res) {
 
   var username = req.body.username;
